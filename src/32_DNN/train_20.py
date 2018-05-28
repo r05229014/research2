@@ -12,12 +12,17 @@ from sklearn.preprocessing import StandardScaler
 import os 
 
 def load_X():
-    tt = np.load('../../data_8km_mean_X/th_8km_mean.npy')
-    ww = np.load('../../data_8km_mean_X/w_8km_mean.npy')
-    yy = np.load('../../data_8km_mean_y/wqv_mean.npy')
-    qq = np.load('../../data_8km_mean_X/qv_8km_mean.npy')
-    uu = np.load('../../data_8km_mean_X/u_8km_mean.npy')
-    vv = np.load('../../data_8km_mean_X/v_8km_mean.npy')
+    tt = np.load('../../../data_8km_mean_X/th_8km_mean.npy')
+    ww = np.load('../../../data_8km_mean_X/w_8km_mean.npy')
+    yy = np.load('../../../data_8km_mean_y/wqv_32.npy')
+    qq = np.load('../../../data_8km_mean_X/qv_8km_mean.npy')
+    uu = np.load('../../../data_8km_mean_X/u_8km_mean.npy')
+    vv = np.load('../../../data_8km_mean_X/v_8km_mean.npy')
+    
+    print(yy.shape, '77777777777777777777')
+    yy = np.swapaxes(yy,1,3)
+    yy = yy.reshape(1423*32*32,70)
+
     #print(w.shape)
     #ww = w[392:393]
     #tt = th[392:393]
@@ -59,11 +64,28 @@ def load_X():
     vv = sc.fit_transform(vv)
    
     ww = ww.reshape(1423,70,32,32,1)    
+    ww = np.swapaxes(ww, 1,3)
+    ww = ww.reshape(1423*32*32,70,1)
+
     tt = tt.reshape(1423,70,32,32,1)    
+    tt = np.swapaxes(tt, 1,3)
+    tt = tt.reshape(1423*32*32,70,1)
+    
     qq = qq.reshape(1423,70,32,32,1)    
+    qq = np.swapaxes(qq, 1,3)
+    qq = qq.reshape(1423*32*32,70,1)
+    
     uu = uu.reshape(1423,70,32,32,1)    
+    uu = np.swapaxes(uu, 1,3)
+    uu = uu.reshape(1423*32*32,70,1)
+    
     vv = vv.reshape(1423,70,32,32,1)    
+    vv = np.swapaxes(vv, 1,3)
+    vv = vv.reshape(1423*32*32,70,1)
+    
+    
     X = np.concatenate((tt,ww,qq,uu,vv), axis=-1)
+    X = X.reshape(1423*32*32,70*5)
     print(X.shape)
     return X, yy
 
@@ -72,11 +94,11 @@ X,y  = load_X()
 def VGG_3D():
     print("Build model!!")
     model = Sequential()
-    model.add(Convolution3D(64,3, strides=(1,1,1), activation='selu', padding='same',kernel_initializer='random_uniform',bias_initializer='zeros', input_shape=(70,32,32,5)))
-    model.add(Convolution3D(64,3, strides=(1,1,1),activation='selu', padding='same',kernel_initializer='random_uniform',bias_initializer='zeros'))
-    model.add(MaxPooling3D((2,2,2), strides=(2,2,2)))
-    model.add(Dropout(0.2))
-    model.add(BatchNormalization())
+#    model.add(Convolution3D(64,3, strides=(1,1,1), activation='selu', padding='same',kernel_initializer='random_uniform',bias_initializer='zeros', input_shape=(70,32,32,5)))
+#    model.add(Convolution3D(64,3, strides=(1,1,1),activation='selu', padding='same',kernel_initializer='random_uniform',bias_initializer='zeros'))
+#    model.add(MaxPooling3D((2,2,2), strides=(2,2,2)))
+#    model.add(Dropout(0.2))
+#    model.add(BatchNormalization())
 
     #model.add(Convolution3D(64,3, strides=(1,1,1),activation='selu', padding='same'))
     #model.add(Convolution3D(64,3, strides=(1,1,1),activation='selu', padding='same'))
@@ -86,15 +108,19 @@ def VGG_3D():
 #    model.add(Convolution3D(64,3, strides=(1,1,1),activation='relu', padding='same'))
 #    model.add(MaxPooling3D((2,2,2), strides=(2,2,2)))
 
-    model.add(Convolution3D(128,3, strides=(1,1,1),activation='selu', padding='same',kernel_initializer='random_uniform',bias_initializer='zeros'))
-    model.add(Convolution3D(128,3, strides=(1,1,1),activation='selu', padding='same',kernel_initializer='random_uniform',bias_initializer='zeros'))
-    model.add(MaxPooling3D((4,4,4), strides=(2,2,2)))
-    model.add(Dropout(0.2))
-    model.add(BatchNormalization())
+#    model.add(Convolution3D(128,3, strides=(1,1,1),activation='selu', padding='same',kernel_initializer='random_uniform',bias_initializer='zeros'))
+#    model.add(Convolution3D(128,3, strides=(1,1,1),activation='selu', padding='same',kernel_initializer='random_uniform',bias_initializer='zeros'))
+#    model.add(MaxPooling3D((4,4,4), strides=(2,2,2)))
+#    model.add(Dropout(0.2))
+#    model.add(BatchNormalization())
 
-    model.add(Flatten())
+#    model.add(Flatten())
+    model.add(Dense(70, activation = 'selu',kernel_initializer='random_uniform',bias_initializer='zeros', input_dim=70*5))
+    model.add(BatchNormalization())
+    model.add(Dropout(0.1))
+        
     for i in range(15):
-        model.add(Dense(70, activation = 'selu',kernel_initializer='random_uniform',bias_initializer='zeros'))
+        model.add(Dense(256, activation = 'selu',kernel_initializer='random_uniform',bias_initializer='zeros'))
         model.add(BatchNormalization())
         model.add(Dropout(0.1))
     model.add(Dense(70, activation = 'linear',kernel_initializer='random_uniform',bias_initializer='zeros'))
@@ -102,16 +128,16 @@ def VGG_3D():
 
 model = VGG_3D()
 print(model.summary())
-dirpath = "../../model/test10/"
+dirpath = "../../../model/testDNN/"
 if not os.path.exists(dirpath):
     os.mkdir(dirpath)
 
 
-filepath="../../model/test10/weights-improvement-{epoch:03d}-{loss:.3e}.hdf5"
-sgd = optimizers.SGD(lr=1, decay=1e-9, momentum=0.9, nesterov=True)
+filepath="../../../model/testDNN/weights-improvement-{epoch:03d}-{loss:.3e}.hdf5"
+sgd = optimizers.SGD(lr=0.01, decay=1e-9, momentum=0.9, nesterov=True)
 model.compile(optimizer = sgd, loss='mean_squared_error')
 checkpoint = ModelCheckpoint(filepath, monitor='loss', 
                             save_best_only=False, mode='min', period=5)
 
-model.fit(X,y, batch_size=28, epochs=200, shuffle=True, callbacks = [checkpoint])
+model.fit(X,y, batch_size=1024, epochs=200, shuffle=True, callbacks = [checkpoint])
 

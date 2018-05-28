@@ -1,9 +1,10 @@
 import numpy as np
 from netCDF4 import Dataset
+import skimage.measure
 
 
-w_ = Dataset('../../data/mjoL.w3d.nc')
-qv_ = Dataset('../../data/mjoL.qv3d.nc')
+w_ = Dataset('../../../data/mjoL.w3d.nc')
+qv_ = Dataset('../../../data/mjoL.qv3d.nc')
 
 w = w_.variables['w'][0,:,:,:]
 w_mean = np.mean(np.mean(w, axis=-1), axis=-1)
@@ -18,9 +19,13 @@ for i in range(70):
     wp[i] = w[i]-w_mean[i]
     qvp[i] = qv[i] - qv_mean[i]
 
-wqv = wp*qvp
-wqv_mean = np.mean(np.mean(wqv,axis=-1),axis=-1)
-wqv_mean = wqv_mean.reshape(1,70)
+
+
+wqv = wp*qvp 
+print(wqv.shape, "wqv_shape")
+# calculate wqv_mean (shape x=32 y=32)
+wqv_32 = skimage.measure.block_reduce(wqv, (1,8,8), np.mean)
+wqv_32 = wqv_32.reshape(1,70,32,32)
 for time in range(1,1423):
     w_tmp = w_.variables['w'][time,:,:,:]
     w_tmp_mean = np.mean(np.mean(w_tmp, axis=-1),axis=-1)
@@ -34,11 +39,11 @@ for time in range(1,1423):
     #    print(w_tmp_mean[i])
         qvp_tmp[z] = qv_tmp[z] - qv_tmp_mean[z]
     wqv_tmp = wp_tmp * qvp_tmp
-    wqv_tmp_mean = np.mean(np.mean(wqv_tmp,axis=-1),axis=-1)
-    wqv_tmp_mean = wqv_tmp_mean.reshape(1,70)
-    wqv_mean = np.concatenate((wqv_mean, wqv_tmp_mean), axis=0)
-    print(wqv_mean.shape)
-np.save('../../data_8km_mean_y/wqv_mean.npy', wqv_mean)
+    wqv_tmp_32 = skimage.measure.block_reduce(wqv_tmp, (1,8,8), np.mean)
+    wqv_tmp_32 = wqv_tmp_32.reshape(1,70,32,32)
+    wqv_32 = np.concatenate((wqv_32, wqv_tmp_32), axis=0)
+    print(wqv_32.shape)
+np.save('../../../data_8km_mean_y/wqv_32.npy', wqv_32)
 
 #for i in range(1,1423):
 #    w_tmp = w_.variables['w'][i:i+1,:,:,:]
