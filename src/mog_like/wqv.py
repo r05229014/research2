@@ -3,8 +3,6 @@ import sys
 from sklearn.preprocessing import StandardScaler
 import random
 import os 
-import psutil
-process = psutil.Process(os.getpid())
 
 def load_y():
     y = np.load('../../../data_8km_mean_y/wqv_32.npy')
@@ -21,55 +19,55 @@ def load_y():
     return new_y
 
 def load_X():
-    th = np.load('../../../data_pooling_xy/th_pool.npy')
-    w = np.load('../../../data_pooling_xy/w_pool.npy')
-    qv = np.load('../../../data_pooling_xy/qv_pool.npy')
-    u = np.load('../../../data_pooling_xy/u_pool.npy')
-    v = np.load('../../../data_pooling_xy/v_pool.npy')
+    th = np.load('../../../data_pooling_xy/th_pool_2.npy')
+    w = np.load('../../../data_pooling_xy/w_pool_2.npy')
+    print('############', w.shape)
+    qv = np.load('../../../data_pooling_xy/qv_pool_2.npy')
+    u = np.load('../../../data_pooling_xy/u_pool_2.npy')
+    v = np.load('../../../data_pooling_xy/v_pool_2.npy')
     
     # normalize
-    sc = StandardScaler()
-    w = w.reshape(1423,70*34*34)
-    w = sc.fit_transform(w)
+    #sc = StandardScaler()
+    #w = w.reshape(1423,70*36*36)
+    #w = sc.fit_transform(w)
     
-    th = th.reshape(1423,70*34*34)
-    th = sc.fit_transform(th)
+    #th = th.reshape(1423,70*36*36)
+    #th = sc.fit_transform(th)
     
-    qv = qv.reshape(1423,70*34*34)
-    qv = sc.fit_transform(qv)
+    #qv = qv.reshape(1423,70*36*36)
+    #qv = sc.fit_transform(qv)
 
-    u = u.reshape(1423,70*34*34)
-    u = sc.fit_transform(u)
+    #u = u.reshape(1423,70*36*36)
+    #u = sc.fit_transform(u)
 
-    v = v.reshape(1423,70*34*34)
-    v = sc.fit_transform(v)
+    #v = v.reshape(1423,70*36*36)
+    #v = sc.fit_transform(v)
 
     # reshape to concat
-    w = w.reshape(1423,70,34,34,1)
-    th = th.reshape(1423,70,34,34,1)
-    qv = qv.reshape(1423,70,34,34,1)
-    u = u.reshape(1423,70,34,34,1)
-    v = v.reshape(1423,70,34,34,1)
+    w = w.reshape(1423,70,36,36,1)   # need change
+    th = th.reshape(1423,70,36,36,1)
+    qv = qv.reshape(1423,70,36,36,1)
+    u = u.reshape(1423,70,36,36,1)
+    v = v.reshape(1423,70,36,36,1)
     X = np.concatenate((th,w,qv,u,v), axis=-1)
 
     print(X.shape)
     return X    
 
 def make_right_X(X):
-    x1 = X[1200:1423]
+    x1 = X[:]
     print(x1.shape)
-    tmp = np.zeros((1024*(1423-1200),70,3,3,5))
+    tmp = np.zeros((1024*(1423),70,5,5,5))  # need change(...'5','5',5)
     h=0
-    for t in range(1423-1200):
+    for t in range(1423):
+        print(t)
         for i in range(1,33):
             for j in range(1,33):
-                tmp[h,:,:,:,:] = x1[t,:,i-1:i+2,j-1:j+2,:] 
+                tmp[h,:,:,:,:] = x1[t,:,i-3:i+5,j-3:j+5,:]  # if change size of input, need change
                 h+=1
     return tmp
 X = load_X()
-print(process.memory_info().rss*10**-6)
 X = make_right_X(X)
-print(process.memory_info().rss*10**-6)
 print(X.shape)
-np.save('../../../data_pooling_xy/X_1200_1423.npy', X)
+np.save('../../../data_pooling_xy/X_all_2.npy', X)
 
