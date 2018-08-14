@@ -57,13 +57,14 @@ def load_X():
 def make_right_X(X):
     x1 = X[:]
     print(x1.shape)
-    tmp = np.zeros((1024*(1423),70,5,5,5))  # need change(...'5','5',5)
+    tmp = np.zeros((1024*1423,70,5,5,5))  # need change(...'5','5',5)
     h=0
     for t in range(1423):
         print(t)
-        for i in range(1,33):
-            for j in range(1,33):
-                tmp[h,:,:,:,:] = x1[t,:,i-3:i+5,j-3:j+5,:]  # if change size of input, need change
+        for i in range(2,34): # need to change range number
+            for j in range(2,33):
+                tmp[h,:,:,:,:] = x1[t,:,i-2:i+3,j-2:j+3,:]  # if change size of input, need change
+                #print(x1[t,:,i-2:i+3,j-2:j+3,:].shape)
                 h+=1
     return tmp
 X = load_X()
